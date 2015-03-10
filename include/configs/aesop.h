@@ -8,8 +8,8 @@
  * SPDX-License-Identifier:	GPL-2.0+
  */
 
-#ifndef __CONFIG_H
-#define __CONFIG_H
+#ifndef __AESOP_H
+#define __AESOP_H
 
 #include <linux/sizes.h>
 #include <asm/arch/cpu.h>		/* get chip and board defs */
@@ -114,7 +114,6 @@
 #define CONFIG_CMDLINE_EDITING
 
 /* Size of malloc() pool before and after relocation */
-#define CONFIG_SYS_MALLOC_F_LEN		(1 << 10)
 #define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + (80 << 20))
 
 #define CONFIG_DRIVER_SMC911X	1
@@ -369,9 +368,5 @@
 #define CONFIG_OF_LIBFDT
 
 #define CONFIG_SYS_GENERIC_BOARD
-#define CONFIG_DM
-#define CONFIG_CMD_DM
-#define CONFIG_DM_GPIO
-#define CONFIG_DM_SERIAL
 
 #endif	/* __CONFIG_H */
