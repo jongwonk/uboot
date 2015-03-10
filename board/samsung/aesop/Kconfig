@@ -10,7 +10,7 @@ config SYS_SOC
 	default "s5pc1xx"
 
 config SYS_CONFIG_NAME
-	default "s5p_aesop"
+	default "aesop"
 
 config DM
 	default y
