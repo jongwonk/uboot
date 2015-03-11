@@ -317,7 +317,7 @@ uart_asm_init:
 .globl mem_ctrl_asm_init
 mem_ctrl_asm_init:
 
-	/* DMC0 initialization at single Type*/
+	/* DMC0 initialization at single Type*/1
 	ldr	r0, =0xF0000000 @ DMC0
 
 	ldr	r1, =0x00101000				@PhyControl0 DLL parameter setting, manual 0x00101000
@@ -350,28 +350,26 @@ find_lock_val:
 	ldr	r1, =0x0FFF2010				@ConControl auto refresh off
 	str	r1, [r0]
 
-	ldr	r1, =0x04  @DMC0_MEMCONTROL			@MemControl BL=4, 1 chip, DDR2 type, dynamic self refresh, force precharge, dynamic power down off
+	ldr	r1, =0x00202400  @ BL=4, 1 chip, DDR2 type, dynamic self refresh, force precharge, dynamic power down off
 	str	r1, [r0, #0x04]  @DMC_MEMCONTROL
 
-	ldr	r1, =DMC0_MEMCONFIG_0			@MemConfig0 256MB config, 8 banks,Mapping Method[12:15]0:linear, 1:linterleaved, 2:Mixed
+	ldr	r1, =0x20F00313  @MemConfig0 256MB config, 8 banks,Mapping Method[12:15]0:linear, 1:linterleaved, 2:Mixed
 	str	r1, [r0, #0x08]  @DMC_MEMCONFIG0
-
-	ldr	r1, =DMC0_MEMCONFIG_1			@MemConfig1
 	str	r1, [r0, #0x0C]  @DMC_MEMCONFIG1
 
-	ldr	r1, =0xFF000000				@PrechConfig
+	ldr	r1, =0xFF000000
 	str	r1, [r0, #0x14]  @DMC_PRECHCONFIG
 
-	ldr	r1, =DMC0_TIMINGA_REF			@TimingAref	7.8us*133MHz=1038(0x40E), 100MHz=780(0x30C), 20MHz=156(0x9C), 10MHz=78(0x4E)
+	ldr	r1, =0x00000618	 @ 7.8us*133MHz=1038(0x40E), 100MHz=780(0x30C), 20MHz=156(0x9C), 10MHz=78(0x4E)
 	str	r1, [r0, #0x30]  @DMC_TIMINGAREF
 
-	ldr	r1, =DMC0_TIMING_ROW			@TimingRow	for @200MHz
+	ldr	r1, =0x2B34438A  @ for @200MHz
 	str	r1, [r0, #0x34]  @DMC_TIMINGROW
 
-	ldr	r1, =DMC0_TIMING_DATA			@TimingData	CL=4
+	ldr	r1, =0x24240000  @TimingData	CL=3
 	str	r1, [r0, #0x38]  @DMC_TIMINGDATA
 
-	ldr	r1, =DMC0_TIMING_PWR			@TimingPower
+	ldr	r1, =0x0BDC0343
 	str	r1, [r0, #0x3C]  @DMC_TIMINGPOWER
 
 	ldr	r1, =0x07000000				@DirectCmd	chip0 Deselect
@@ -483,116 +481,113 @@ find_lock_val1:
 	orr	r1, r2, #0x3				@Force Value locking
 	str	r1, [r0, #0x18]  @DMC_PHYCONTROL0
 
-	/* settinf fot DDR2 */
+	/* setting for DDR2 */
 	ldr	r0, =0xF1400000 @ DMC1
 
 	ldr	r1, =0x0FFF2010				@auto refresh off
 	str	r1, [r0]
 
-	ldr	r1, =DMC1_MEMCONTROL			@MemControl	BL=4, 2 chip, DDR2 type, dynamic self refresh, force precharge, dynamic power down off
+	ldr	r1, =DMC1_MEMCONTROL	@MemControl	BL=4, 2 chip, DDR2 type, dynamic self refresh, force precharge, dynamic power down off
 	str	r1, [r0, #0x04]  @DMC_MEMCONTROL
 
-	ldr	r1, =DMC1_MEMCONFIG_0			@MemConfig0	512MB config, 8 banks,Mapping Method[12:15]0:linear, 1:linterleaved, 2:Mixed
+	ldr	r1, =DMC1_MEMCONFIG_0	@MemConfig0	512MB config, 8 banks,Mapping Method[12:15]0:linear, 1:linterleaved, 2:Mixed
 	str	r1, [r0, #0x08]  @DMC_MEMCONFIG0
-
-	ldr	r1, =DMC1_MEMCONFIG_1			@MemConfig1
 	str	r1, [r0, #0x0C]  @DMC_MEMCONFIG1
 
 	ldr	r1, =0xFF000000
-	str	r1, [r0, #0x14]  @DMC_PRECHCONFIG
+	str	r1, [r0, #0x14] @DMC_PRECHCONFIG
 
-	ldr	r1, =DMC1_TIMINGA_REF			@TimingAref	7.8us*133MHz=1038(0x40E), 100MHz=780(0x30C), 20MHz=156(0x9C), 10MHz=78(0x4
+	ldr	r1, =0x00000618	 @ 7.8us*133MHz=1038(0x40E), 100MHz=780(0x30C), 20MHz=156(0x9C), 10MHz=78(0x4
 	str	r1, [r0, #0x30]  @DMC_TIMINGAREF
 
-	ldr	r1, =DMC1_TIMING_ROW			@TimingRow	for @200MHz
+	ldr	r1, =0x2B34438A	 @ for @200MHz
 	str	r1, [r0, #0x34]  @DMC_TIMINGROW
 
-	ldr	r1, =DMC1_TIMING_DATA			@TimingData	CL=3
+	ldr	r1, =0x24240000	 @ CL=3
 	str	r1, [r0, #0x38]  @DMC_TIMINGDATA
 
-	ldr	r1, =DMC1_TIMING_PWR			@TimingPower
+	ldr	r1, =0x0BDC0343
 	str	r1, [r0, #0x3C]  @DMC_TIMINGPOWER
 
-
-	ldr	r1, =0x07000000				@DirectCmd	chip0 Deselect
+	ldr	r1, =0x07000000	 @DirectCmd	chip0 Deselect
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x01000000				@DirectCmd	chip0 PALL
+	ldr	r1, =0x01000000	 @DirectCmd	chip0 PALL
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x00020000				@DirectCmd	chip0 EMRS2
+	ldr	r1, =0x00020000	 @DirectCmd	chip0 EMRS2
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x00030000				@DirectCmd	chip0 EMRS3
+	ldr	r1, =0x00030000	 @DirectCmd	chip0 EMRS3
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x00010400				@DirectCmd	chip0 EMRS1 (MEM DLL on, DQS# disable)
+	ldr	r1, =0x00010400	 @DirectCmd	chip0 EMRS1 (MEM DLL on, DQS# disable)
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x00000542				@DirectCmd	chip0 MRS (MEM DLL reset) CL=4, BL=4
+	ldr	r1, =0x00000542	 @DirectCmd	chip0 MRS (MEM DLL reset) CL=4, BL=4
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x01000000				@DirectCmd	chip0 PALL
+	ldr	r1, =0x01000000	 @DirectCmd	chip0 PALL
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x05000000				@DirectCmd	chip0 REFA
+	ldr	r1, =0x05000000	 @DirectCmd	chip0 REFA
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x05000000				@DirectCmd	chip0 REFA
+	ldr	r1, =0x05000000	 @DirectCmd	chip0 REFA
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x00000442				@DirectCmd	chip0 MRS (MEM DLL unreset)
+	ldr	r1, =0x00000442	 @DirectCmd	chip0 MRS (MEM DLL unreset)
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x00010780				@DirectCmd	chip0 EMRS1 (OCD default)
+	ldr	r1, =0x00010780	 @DirectCmd	chip0 EMRS1 (OCD default)
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x00010400				@DirectCmd	chip0 EMRS1 (OCD exit)
+	ldr	r1, =0x00010400	 @DirectCmd	chip0 EMRS1 (OCD exit)
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x07100000				@DirectCmd	chip1 Deselect
+	ldr	r1, =0x07100000	 @DirectCmd	chip1 Deselect
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x01100000				@DirectCmd	chip1 PALL
+	ldr	r1, =0x01100000	 @DirectCmd	chip1 PALL
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x00120000				@DirectCmd	chip1 EMRS2
+	ldr	r1, =0x00120000	 @DirectCmd	chip1 EMRS2
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x00130000				@DirectCmd	chip1 EMRS3
+	ldr	r1, =0x00130000	 @DirectCmd	chip1 EMRS3
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x00110440				@DirectCmd	chip1 EMRS1 (MEM DLL on, DQS# disable)
+	ldr	r1, =0x00110440	 @DirectCmd	chip1 EMRS1 (MEM DLL on, DQS# disable)
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x00100542				@DirectCmd	chip1 MRS (MEM DLL reset) CL=4, BL=4
+	ldr	r1, =0x00100542	 @DirectCmd	chip1 MRS (MEM DLL reset) CL=4, BL=4
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x01100000				@DirectCmd	chip1 PALL
+	ldr	r1, =0x01100000	 @DirectCmd	chip1 PALL
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x05100000				@DirectCmd	chip1 REFA
+	ldr	r1, =0x05100000	 @DirectCmd	chip1 REFA
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x05100000				@DirectCmd	chip1 REFA
+	ldr	r1, =0x05100000	 @DirectCmd	chip1 REFA
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x00100442				@DirectCmd	chip1 MRS (MEM DLL unreset)
+	ldr	r1, =0x00100442	 @DirectCmd	chip1 MRS (MEM DLL unreset)
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x00110780				@DirectCmd	chip1 EMRS1 (OCD default)
+	ldr	r1, =0x00110780	 @DirectCmd	chip1 EMRS1 (OCD default)
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x00110400				@DirectCmd	chip1 EMRS1 (OCD exit)
+	ldr	r1, =0x00110400	 @DirectCmd	chip1 EMRS1 (OCD exit)
 	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
 
-	ldr	r1, =0x0FF02030				@ConControl	auto refresh on
+	ldr	r1, =0x0FF02030	 @ConControl	auto refresh on
 	str	r1, [r0]
 
-	ldr	r1, =0xFFFF00FF				@PwrdnConfig
+	ldr	r1, =0xFFFF00FF	 @PwrdnConfig
 	str	r1, [r0, #0x28]  @DMC_PWRDNCONFIG
 
-	ldr	r1, =DMC1_MEMCONTROL			@MemControl	BL=4, 2 chip, DDR2 type, dynamic self refresh, force precharge, dynamic power down off
+	ldr	r1, =0x00202400	 @ BL=4, 2 chip, DDR2 type, dynamic self refresh, force precharge, dynamic power down off
 	str	r1, [r0, #0x04]  @DMC_MEMCONTROL
 
 	mov	pc, lr
