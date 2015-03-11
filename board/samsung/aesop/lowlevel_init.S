@@ -29,31 +29,14 @@ lowlevel_init:
 	/* r5 has always zero */
 	mov	r5, #0
 
-	ldr	r7, =S5PC100_GPIO_BASE
-	ldr	r8, =S5PC100_GPIO_BASE
-	/* Read CPU ID */
-	ldr	r2, =S5PC110_PRO_ID
-	ldr	r0, [r2]
-	mov	r1, #0x00010000
-	and	r0, r0, r1
-	cmp	r0, r5
-	beq	100f
-	ldr	r8, =S5PC110_GPIO_BASE
-100:
-	/* Turn on KEY_LED_ON [GPJ4(1)] XMSMWEN */
-	cmp	r7, r8
-	beq	skip_check_didle			@ Support C110 only
-
 	ldr	r0, =S5PC110_RST_STAT
 	ldr	r1, [r0]
 	and	r1, r1, #0x000D0000
 	cmp	r1, #(0x1 << 19)			@ DEEPIDLE_WAKEUP
 	beq	didle_wakeup
-	cmp	r7, r8
 
 skip_check_didle:
-	addeq	r0, r8, #0x280				@ S5PC100_GPIO_J4
-	addne	r0, r8, #0x2C0				@ S5PC110_GPIO_J4
+	add	r0, r8, #0x2C0				@ S5PC110_GPIO_J4
 	ldr	r1, [r0, #0x0]				@ GPIO_CON_OFFSET
 	bic	r1, r1, #(0xf << 4)			@ 1 * 4-bit
 	orr	r1, r1, #(0x1 << 4)
@@ -62,9 +45,6 @@ skip_check_didle:
 	ldr	r1, [r0, #0x4]				@ GPIO_DAT_OFFSET
 	bic	r1, r1, #(1 << 1)
 	str	r1, [r0, #0x4]				@ GPIO_DAT_OFFSET
-
-	/* Don't setup at s5pc100 */
-	beq	100f
 
 	/*
 	 * Initialize Async Register Setting for EVT1
@@ -85,6 +65,7 @@ skip_check_didle:
 	 *	0xF1F0_0000
 	 *	0xFAF0_0000
 	 */
+
 	ldr     r0, =0xe0f00000
 	ldr     r1, [r0]
 	bic     r1, r1, #0x1
@@ -148,31 +129,24 @@ skip_check_didle:
 	ldr	r1, =0x00800000
 	str	r1, [r0]
 
-100:
 	/* IO retension release */
-	ldreq	r0, =S5PC100_OTHERS			@ 0xE0108200
-	ldrne	r0, =S5PC110_OTHERS			@ 0xE010E000
+	ldr	r0, =S5PC110_OTHERS			@ 0xE010E000
 	ldr	r1, [r0]
-	ldreq	r2, =(1 << 31)				@ IO_RET_REL
-	ldrne	r2, =((1 << 31) | (1 << 30) | (1 << 29) | (1 << 28))
+	ldr	r2, =((1 << 31) | (1 << 30) | (1 << 29) | (1 << 28))
 	orr	r1, r1, r2
 	/* Do not release retention here for S5PC110 */
-	streq	r1, [r0]
 
 	/* Disable Watchdog */
-	ldreq	r0, =S5PC100_WATCHDOG_BASE		@ 0xEA200000
-	ldrne	r0, =S5PC110_WATCHDOG_BASE		@ 0xE2700000
+	ldr	r0, =S5PC110_WATCHDOG_BASE		@ 0xE2700000
 	str	r5, [r0]
 
 	/* setting SRAM */
-	ldreq	r0, =S5PC100_SROMC_BASE
-	ldrne	r0, =S5PC110_SROMC_BASE
+	ldr	r0, =S5PC110_SROMC_BASE
 	ldr	r1, =0x9
 	str	r1, [r0]
 
 	/* S5PC100 has 3 groups of interrupt sources */
-	ldreq	r0, =S5PC100_VIC0_BASE			@ 0xE4000000
-	ldrne	r0, =S5PC110_VIC0_BASE			@ 0xF2000000
+	ldr	r0, =S5PC110_VIC0_BASE			@ 0xF2000000
 	add	r1, r0, #0x00100000
 	add	r2, r0, #0x00200000
 
@@ -192,24 +166,23 @@ skip_check_didle:
 	str	r5, [r1, #0xf00]			@ INTADDRESS
 	str	r5, [r2, #0xf00]			@ INTADDRESS
 
+	bl  system_clock_init
+
+	bl mem_ctrl_asm_init
+
 	/* for UART */
 	bl	uart_asm_init
 
 	bl	internal_ram_init
 
-	cmp	r7, r8
-	/* Clear wakeup status register */
-	ldreq	r0, =S5PC100_WAKEUP_STAT
-	ldrne	r0, =S5PC110_WAKEUP_STAT
+	ldr	r0, =S5PC110_WAKEUP_STAT
 	ldr	r1, [r0]
 	str	r1, [r0]
 
 	/* IO retension release */
-	ldreq	r0, =S5PC100_OTHERS			@ 0xE0108200
-	ldrne	r0, =S5PC110_OTHERS			@ 0xE010E000
+	ldr	r0, =S5PC110_OTHERS			@ 0xE010E000
 	ldr	r1, [r0]
-	ldreq	r2, =(1 << 31)				@ IO_RET_REL
-	ldrne	r2, =((1 << 31) | (1 << 30) | (1 << 29) | (1 << 28))
+	ldr	r2, =((1 << 31) | (1 << 30) | (1 << 29) | (1 << 28))
 	orr	r1, r1, r2
 	str	r1, [r0]
 
@@ -242,150 +215,66 @@ lockloop:
  * void system_clock_init(void)
  */
 system_clock_init:
-	ldr	r0, =S5PC110_CLOCK_BASE		@ 0xE0100000
 
-	/* Check S5PC100 */
-	cmp	r7, r8
-	bne	110f
-100:
-	/* Set Lock Time */
-	ldr	r1, =0xe10			@ Locktime : 0xe10 = 3600
-	str	r1, [r0, #0x000]		@ S5PC100_APLL_LOCK
-	str	r1, [r0, #0x004]		@ S5PC100_MPLL_LOCK
-	str	r1, [r0, #0x008]		@ S5PC100_EPLL_LOCK
-	str	r1, [r0, #0x00C]		@ S5PC100_HPLL_LOCK
+	ldr	r0, =0xE0100000 @APLL_LOCK
 
-	/* S5P_APLL_CON */
-	ldr	r1, =0x81bc0400		@ SDIV 0, PDIV 4, MDIV 444 (1333MHz)
-	str	r1, [r0, #0x100]
-	/* S5P_MPLL_CON */
-	ldr	r1, =0x80590201		@ SDIV 1, PDIV 2, MDIV 89 (267MHz)
-	str	r1, [r0, #0x104]
-	/* S5P_EPLL_CON */
-	ldr	r1, =0x80870303		@ SDIV 3, PDIV 3, MDIV 135 (67.5MHz)
-	str	r1, [r0, #0x108]
-	/* S5P_HPLL_CON */
-	ldr	r1, =0x80600603		@ SDIV 3, PDIV 6, MDIV 96
-	str	r1, [r0, #0x10C]
+	/* Set Mux to FIN */
+	ldr	r1, =0x0
+	str	r1, [r0, #0x200] @CLK_SRC0
 
-	ldr     r1, [r0, #0x300]
-	ldr     r2, =0x00003fff
-	bic     r1, r1, r2
-	ldr     r2, =0x00011301
+	ldr	r1,	=APLL_LOCKTIME_VAL
+	str	r1,	[r0] @APLL_LOCK
 
+	/* Disable PLL */
+	ldr	r1, =0x0
+	str	r1, [r0, #0x100] @APLL_CON0_OFFSET
+	str	r1, [r0, #0x108] @MPLL_CON_OFFSET
+	str	r1, [r0, #0x110] @EPLL_CON_OFFSET
+	str	r1, [r0, #0x120] @VPLL_CON_OFFSET
+
+	ldr r1, [r0, #0x300] @CLK_DIV0_OFFSET
+	ldr	r2, =CLK_DIV0_MASK
+	bic	r1, r1, r2
+
+	ldr	r2, =CLK_DIV0_VAL
 	orr	r1, r1, r2
-	str	r1, [r0, #0x300]
-	ldr     r1, [r0, #0x304]
-	ldr     r2, =0x00011110
-	orr     r1, r1, r2
-	str     r1, [r0, #0x304]
-	ldr     r1, =0x00000001
-	str     r1, [r0, #0x308]
+	str	r1, [r0, #0x300] @CLK_DIV0_OFFSET
 
-	/* Set Source Clock */
-	ldr	r1, =0x00001111			@ A, M, E, HPLL Muxing
-	str	r1, [r0, #0x200]		@ S5PC1XX_CLK_SRC0
+	ldr	r1, =APLL_VAL
+	str	r1, [r0, #0x100] @APLL_CON0_OFFSET
 
-	b	200f
-110:
-	ldr	r0, =0xE010C000			@ S5PC110_PWR_CFG
+	ldr	r1, =MPLL_VAL
+	str	r1, [r0, #0x108] @MPLL_CON_OFFSET
 
-	/* Set OSC_FREQ value */
-	ldr	r1, =0xf
-	str	r1, [r0, #0x100]		@ S5PC110_OSC_FREQ
+	ldr	r1, =EPLL_VAL
+	str	r1, [r0, #0x110] @EPLL_CON_OFFSET
 
-	/* Set MTC_STABLE value */
-	ldr	r1, =0xffffffff
-	str	r1, [r0, #0x110]		@ S5PC110_MTC_STABLE
+	ldr	r1, =VPLL_VAL
+	str	r1, [r0, #0x120] @VPLL_CON_OFFSET
 
-	/* Set CLAMP_STABLE value */
-	ldr	r1, =0x3ff03ff
-	str	r1, [r0, #0x114]		@ S5PC110_CLAMP_STABLE
+#if defined(CONFIG_EVT1)
+	ldr	r1, =AFC_ON
+	str	r1, [r0, #0x104] @APLL_CON1_OFFSET
+#endif
 
-	ldr	r0, =S5PC110_CLOCK_BASE		@ 0xE0100000
-
-	/* Set Clock divider */
-	ldr	r1, =0x14131330			@ 1:1:4:4, 1:4:5
-	str	r1, [r0, #0x300]
-	ldr	r1, =0x11110111			@ UART[3210]: MMC[3210]
-	str	r1, [r0, #0x310]
-
-	/* Set Lock Time */
-	ldr	r1, =0x2cf			@ Locktime : 30us
-	str	r1, [r0, #0x000]		@ S5PC110_APLL_LOCK
-	ldr	r1, =0xe10			@ Locktime : 0xe10 = 3600
-	str	r1, [r0, #0x008]		@ S5PC110_MPLL_LOCK
-	str	r1, [r0, #0x010]		@ S5PC110_EPLL_LOCK
-	str	r1, [r0, #0x020]		@ S5PC110_VPLL_LOCK
-
-	/* S5PC110_APLL_CON */
-	ldr	r1, =0x80C80601			@ 800MHz
-	str	r1, [r0, #0x100]
-	/* S5PC110_MPLL_CON */
-	ldr	r1, =0x829B0C01			@ 667MHz
-	str	r1, [r0, #0x108]
-	/* S5PC110_EPLL_CON */
-	ldr	r1, =0x80600602			@  96MHz VSEL 0 P 6 M 96 S 2
-	str	r1, [r0, #0x110]
-	/* S5PC110_VPLL_CON */
-	ldr	r1, =0x806C0603			@  54MHz
-	str	r1, [r0, #0x120]
-
-	/* Set Source Clock */
-	ldr	r1, =0x10001111			@ A, M, E, VPLL Muxing
-	str	r1, [r0, #0x200]		@ S5PC1XX_CLK_SRC0
-
-	/* OneDRAM(DMC0) clock setting */
-	ldr	r1, =0x01000000			@ ONEDRAM_SEL[25:24] 1 SCLKMPLL
-	str	r1, [r0, #0x218]		@ S5PC110_CLK_SRC6
-	ldr	r1, =0x30000000			@ ONEDRAM_RATIO[31:28] 3 + 1
-	str	r1, [r0, #0x318]		@ S5PC110_CLK_DIV6
-
-	/* XCLKOUT = XUSBXTI 24MHz */
-	add	r2, r0, #0xE000			@ S5PC110_OTHERS
-	ldr     r1, [r2]
-	orr	r1, r1, #(0x3 << 8)		@ CLKOUT[9:8] 3 XUSBXTI
-	str	r1, [r2]
-
-	/* CLK_IP0 */
-	ldr	r1, =0x8fefeeb			@ DMC[1:0] PDMA0[3] IMEM[5]
-	str	r1, [r0, #0x460]		@ S5PC110_CLK_IP0
-
-	/* CLK_IP1 */
-	ldr	r1, =0xe9fdf0f9			@ FIMD[0] USBOTG[16]
-						@ NANDXL[24]
-	str	r1, [r0, #0x464]		@ S5PC110_CLK_IP1
-
-	/* CLK_IP2 */
-	ldr	r1, =0xf75f7fc			@ CORESIGHT[8] MODEM[9]
-						@ HOSTIF[10] HSMMC0[16]
-						@ HSMMC2[18] VIC[27:24]
-	str	r1, [r0, #0x468]		@ S5PC110_CLK_IP2
-
-	/* CLK_IP3 */
-	ldr	r1, =0x8eff038c			@ I2C[8:6]
-						@ SYSTIMER[16] UART0[17]
-						@ UART1[18] UART2[19]
-						@ UART3[20] WDT[22]
-						@ PWM[23] GPIO[26] SYSCON[27]
-	str	r1, [r0, #0x46c]		@ S5PC110_CLK_IP3
-
-	/* CLK_IP4 */
-	ldr	r1, =0xfffffff1			@ CHIP_ID[0] TZPC[8:5]
-	str	r1, [r0, #0x470]		@ S5PC110_CLK_IP3
-
-200:
-	/* wait at least 200us to stablize all clock */
-	mov	r2, #0x10000
-1:	subs	r2, r2, #1
+	mov	r1, #0x10000
+1:	subs	r1, r1, #1
 	bne	1b
 
-	mov	pc, lr
+	ldr	r1, [r0, #0x200] @CLK_SRC0_OFFSET
+	ldr	r2, =0x10001111
+	orr	r1, r1, r2
+	str	r1, [r0, #0x200] @CLK_SRC0_OFFSET
 
-internal_ram_init:
-	ldreq	r0, =0xE3800000
-	ldrne	r0, =0xF1500000
-	ldr	r1, =0x0
+	/* CLK_DIV6 */
+	ldr	r1, [r0, #0x318]  @CLK_DIV6_OFFSET
+	bic	r1, r1, #(0x7<<12)@ONENAND_RATIO: 0
+	str	r1, [r0, #0x318]  @CLK_DIV6_OFFSET
+
+	mov	pc, lr
+internal_ram_init: @ TZPC initialization
+	ldr	r0, =0xF1500000 @TZPC0
+	ldr	r1, =0x0	@ no secure region
 	str	r1, [r0]
 
 	mov	pc, lr
@@ -394,53 +283,316 @@ internal_ram_init:
  * uart_asm_init: Initialize UART's pins
  */
 uart_asm_init:
-	/* set GPIO to enable UART0-UART4 */
-	mov	r0, r8
+	/* set GPIO(GPA) to enable UART */
+
+	ldr	r0, =0xE0200000 @GPA0CON
 	ldr	r1, =0x22222222
-	str	r1, [r0, #0x0]			@ S5PC100_GPIO_A0_OFFSET
-	ldr	r1, =0x00002222
-	str	r1, [r0, #0x20]			@ S5PC100_GPIO_A1_OFFSET
+	str r1, [r0] @#GPA0CON_OFFSET
 
-	/* Check S5PC100 */
-	cmp	r7, r8
-	bne	110f
+	ldr r1, =0x00000022   @GPA1_[2,3]:input, GPA1_[0,1]:RXD,TXD
+	str r1, [r0, #0x20] @GPA1CON_OFFSET
 
-	/* UART_SEL GPK0[5] at S5PC100 */
-	add	r0, r8, #0x2A0			@ S5PC100_GPIO_K0_OFFSET
-	ldr	r1, [r0, #0x0]			@ S5PC1XX_GPIO_CON_OFFSET
-	bic	r1, r1, #(0xf << 20)		@ 20 = 5 * 4-bit
-	orr	r1, r1, #(0x1 << 20)		@ Output
-	str	r1, [r0, #0x0]			@ S5PC1XX_GPIO_CON_OFFSET
+	ldr	r0, =0xE2900400 @ULCON1, UART1 console base
+	mov	r1, #0x0
+	str	r1, [r0, #0x8] @UFCON_OFFSET
+	str	r1, [r0, #0xC] @UMCON_OFFSET
 
-	ldr	r1, [r0, #0x8]			@ S5PC1XX_GPIO_PULL_OFFSET
-	bic	r1, r1, #(0x3 << 10)		@ 10 = 5 * 2-bit
-	orr	r1, r1, #(0x2 << 10)		@ Pull-up enabled
-	str	r1, [r0, #0x8]			@ S5PC1XX_GPIO_PULL_OFFSET
+	mov	r1, #0x3
+	str	r1, [r0] @ULCON_OFFSET
 
-	ldr	r1, [r0, #0x4]			@ S5PC1XX_GPIO_DAT_OFFSET
-	orr	r1, r1, #(1 << 5)		@ 5 = 5 * 1-bit
-	str	r1, [r0, #0x4]			@ S5PC1XX_GPIO_DAT_OFFSET
+	ldr	r1, =0x3c5
+	str	r1, [r0, #0x4] @UCON_OFFSET
 
-	b	200f
-110:
-	/*
-	 * Note that the following address
-	 * 0xE020'0360 is reserved address at S5PC100
-	 */
-	/* UART_SEL MP0_5[7] at S5PC110 */
-	add	r0, r8, #0x360			@ S5PC110_GPIO_MP0_5_OFFSET
-	ldr	r1, [r0, #0x0]			@ S5PC1XX_GPIO_CON_OFFSET
-	bic	r1, r1, #(0xf << 28)		@ 28 = 7 * 4-bit
-	orr	r1, r1, #(0x1 << 28)		@ Output
-	str	r1, [r0, #0x0]			@ S5PC1XX_GPIO_CON_OFFSET
+	ldr	r1, =UART_UBRDIV_VAL
+	str	r1, [r0, #0x28] @UBRDIV_OFFSET
 
-	ldr	r1, [r0, #0x8]			@ S5PC1XX_GPIO_PULL_OFFSET
-	bic	r1, r1, #(0x3 << 14)		@ 14 = 7 * 2-bit
-	orr	r1, r1, #(0x2 << 14)		@ Pull-up enabled
-	str	r1, [r0, #0x8]			@ S5PC1XX_GPIO_PULL_OFFSET
+	ldr	r1, =UART_UDIVSLOT_VAL
+	str	r1, [r0, #0x2C] @UDIVSLOT_OFFSET
 
-	ldr	r1, [r0, #0x4]			@ S5PC1XX_GPIO_DAT_OFFSET
-	orr	r1, r1, #(1 << 7)		@ 7 = 7 * 1-bit
-	str	r1, [r0, #0x4]			@ S5PC1XX_GPIO_DAT_OFFSET
-200:
+	ldr	r1, =0x4f4f4f4f
+	str	r1, [r0, #0x20] @TXH_OFFSET, @'O'
+
+	mov	pc, lr
+
+.globl mem_ctrl_asm_init
+mem_ctrl_asm_init:
+
+	/* DMC0 initialization at single Type*/
+	ldr	r0, =0xF0000000 @ DMC0
+
+	ldr	r1, =0x00101000				@PhyControl0 DLL parameter setting, manual 0x00101000
+	str	r1, [r0, #0x18]  @DMC_PHYCONTROL0
+
+	ldr	r1, =0x00000086				@PhyControl1 DLL parameter setting, LPDDR/LPDDR2 Case
+	str	r1, [r0, #0x1C] @DMC_PHYCONTROL1
+
+	ldr	r1, =0x00101002				@PhyControl0 DLL on
+	str	r1, [r0, #0x18]  @DMC_PHYCONTROL0
+
+	ldr	r1, =0x00101003				@PhyControl0 DLL start
+	str	r1, [r0, #0x18]  @DMC_PHYCONTROL0
+
+find_lock_val:
+	ldr	r1, [r0, #0x40]  @DMC_PHYSTATUS		@Load Phystatus register value
+	and	r2, r1, #0x7
+	cmp	r2, #0x7				@Loop until DLL is locked
+	bne	find_lock_val
+
+	and	r1, #0x3fc0
+	mov	r2, r1, LSL #18
+	orr	r2, r2, #0x100000
+	orr	r2 ,r2, #0x1000
+
+	orr	r1, r2, #0x3				@Force Value locking
+	str	r1, [r0, #0x18]  @DMC_PHYCONTROL0
+
+	/* setting DDR2 */
+	ldr	r1, =0x0FFF2010				@ConControl auto refresh off
+	str	r1, [r0]
+
+	ldr	r1, =0x04  @DMC0_MEMCONTROL			@MemControl BL=4, 1 chip, DDR2 type, dynamic self refresh, force precharge, dynamic power down off
+	str	r1, [r0, #0x04]  @DMC_MEMCONTROL
+
+	ldr	r1, =DMC0_MEMCONFIG_0			@MemConfig0 256MB config, 8 banks,Mapping Method[12:15]0:linear, 1:linterleaved, 2:Mixed
+	str	r1, [r0, #0x08]  @DMC_MEMCONFIG0
+
+	ldr	r1, =DMC0_MEMCONFIG_1			@MemConfig1
+	str	r1, [r0, #0x0C]  @DMC_MEMCONFIG1
+
+	ldr	r1, =0xFF000000				@PrechConfig
+	str	r1, [r0, #0x14]  @DMC_PRECHCONFIG
+
+	ldr	r1, =DMC0_TIMINGA_REF			@TimingAref	7.8us*133MHz=1038(0x40E), 100MHz=780(0x30C), 20MHz=156(0x9C), 10MHz=78(0x4E)
+	str	r1, [r0, #0x30]  @DMC_TIMINGAREF
+
+	ldr	r1, =DMC0_TIMING_ROW			@TimingRow	for @200MHz
+	str	r1, [r0, #0x34]  @DMC_TIMINGROW
+
+	ldr	r1, =DMC0_TIMING_DATA			@TimingData	CL=4
+	str	r1, [r0, #0x38]  @DMC_TIMINGDATA
+
+	ldr	r1, =DMC0_TIMING_PWR			@TimingPower
+	str	r1, [r0, #0x3C]  @DMC_TIMINGPOWER
+
+	ldr	r1, =0x07000000				@DirectCmd	chip0 Deselect
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x01000000				@DirectCmd	chip0 PALL
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00020000				@DirectCmd	chip0 EMRS2
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00030000				@DirectCmd	chip0 EMRS3
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00010400				@DirectCmd	chip0 EMRS1 (MEM DLL on, DQS# disable)
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00000542				@DirectCmd	chip0 MRS (MEM DLL reset) CL=4, BL=4
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x01000000				@DirectCmd	chip0 PALL
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x05000000				@DirectCmd	chip0 REFA
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x05000000				@DirectCmd	chip0 REFA
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00000442				@DirectCmd	chip0 MRS (MEM DLL unreset)
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00010780				@DirectCmd	chip0 EMRS1 (OCD default)
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00010400				@DirectCmd	chip0 EMRS1 (OCD exit)
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x07100000				@DirectCmd	chip1 Deselect
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x01100000				@DirectCmd	chip1 PALL
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00120000				@DirectCmd	chip1 EMRS2
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00130000				@DirectCmd	chip1 EMRS3
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00110400				@DirectCmd	chip1 EMRS1 (MEM DLL on, DQS# disable)
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00100542				@DirectCmd	chip1 MRS (MEM DLL reset) CL=4, BL=4
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x01100000				@DirectCmd	chip1 PALL
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x05100000				@DirectCmd	chip1 REFA
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x05100000				@DirectCmd	chip1 REFA
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00100442				@DirectCmd	chip1 MRS (MEM DLL unreset)
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00110780				@DirectCmd	chip1 EMRS1 (OCD default)
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00110400				@DirectCmd	chip1 EMRS1 (OCD exit)
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x0FF02030				@ConControl	auto refresh on
+	str	r1, [r0]   @DMC_CONCONTROL
+
+	ldr	r1, =0xFFFF00FF				@PwrdnConfig
+	str	r1, [r0, #0x28]  @DMC_PWRDNCONFIG
+
+	ldr	r1, =0x00202400				@MemControl	BL=4, 1 chip, DDR2 type, dynamic self refresh, force precharge, dynamic power down off
+	str	r1, [r0, #0x04]  @DMC_MEMCONTROL
+
+	/* DMC1 initialization */
+	ldr	r0, =0xF1400000 @DMC1
+
+	ldr	r1, =0x00101000				@Phycontrol0 DLL parameter setting
+	str	r1, [r0, #0x18]  @DMC_PHYCONTROL0
+
+	ldr	r1, =0x00000086				@Phycontrol1 DLL parameter setting
+	str	r1, [r0, #0x1C]  @DMC_PHYCONTROL1
+
+	ldr	r1, =0x00101002				@PhyControl0 DLL on
+	str	r1, [r0, #0x18]  @DMC_PHYCONTROL0
+
+	ldr	r1, =0x00101003				@PhyControl0 DLL start
+	str	r1, [r0, #0x18]  @DMC_PHYCONTROL0
+find_lock_val1:
+	ldr	r1, [r0, #0x40]  @DMC_PHYSTATUS		@Load Phystatus register value
+	and	r2, r1, #0x7
+	cmp	r2, #0x7				@Loop until DLL is locked
+	bne	find_lock_val1
+
+	and	r1, #0x3fc0
+	mov	r2, r1, LSL #18
+	orr	r2, r2, #0x100000
+	orr	r2, r2, #0x1000
+
+	orr	r1, r2, #0x3				@Force Value locking
+	str	r1, [r0, #0x18]  @DMC_PHYCONTROL0
+
+	/* settinf fot DDR2 */
+	ldr	r0, =0xF1400000 @ DMC1
+
+	ldr	r1, =0x0FFF2010				@auto refresh off
+	str	r1, [r0]
+
+	ldr	r1, =DMC1_MEMCONTROL			@MemControl	BL=4, 2 chip, DDR2 type, dynamic self refresh, force precharge, dynamic power down off
+	str	r1, [r0, #0x04]  @DMC_MEMCONTROL
+
+	ldr	r1, =DMC1_MEMCONFIG_0			@MemConfig0	512MB config, 8 banks,Mapping Method[12:15]0:linear, 1:linterleaved, 2:Mixed
+	str	r1, [r0, #0x08]  @DMC_MEMCONFIG0
+
+	ldr	r1, =DMC1_MEMCONFIG_1			@MemConfig1
+	str	r1, [r0, #0x0C]  @DMC_MEMCONFIG1
+
+	ldr	r1, =0xFF000000
+	str	r1, [r0, #0x14]  @DMC_PRECHCONFIG
+
+	ldr	r1, =DMC1_TIMINGA_REF			@TimingAref	7.8us*133MHz=1038(0x40E), 100MHz=780(0x30C), 20MHz=156(0x9C), 10MHz=78(0x4
+	str	r1, [r0, #0x30]  @DMC_TIMINGAREF
+
+	ldr	r1, =DMC1_TIMING_ROW			@TimingRow	for @200MHz
+	str	r1, [r0, #0x34]  @DMC_TIMINGROW
+
+	ldr	r1, =DMC1_TIMING_DATA			@TimingData	CL=3
+	str	r1, [r0, #0x38]  @DMC_TIMINGDATA
+
+	ldr	r1, =DMC1_TIMING_PWR			@TimingPower
+	str	r1, [r0, #0x3C]  @DMC_TIMINGPOWER
+
+
+	ldr	r1, =0x07000000				@DirectCmd	chip0 Deselect
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x01000000				@DirectCmd	chip0 PALL
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00020000				@DirectCmd	chip0 EMRS2
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00030000				@DirectCmd	chip0 EMRS3
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00010400				@DirectCmd	chip0 EMRS1 (MEM DLL on, DQS# disable)
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00000542				@DirectCmd	chip0 MRS (MEM DLL reset) CL=4, BL=4
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x01000000				@DirectCmd	chip0 PALL
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x05000000				@DirectCmd	chip0 REFA
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x05000000				@DirectCmd	chip0 REFA
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00000442				@DirectCmd	chip0 MRS (MEM DLL unreset)
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00010780				@DirectCmd	chip0 EMRS1 (OCD default)
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00010400				@DirectCmd	chip0 EMRS1 (OCD exit)
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x07100000				@DirectCmd	chip1 Deselect
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x01100000				@DirectCmd	chip1 PALL
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00120000				@DirectCmd	chip1 EMRS2
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00130000				@DirectCmd	chip1 EMRS3
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00110440				@DirectCmd	chip1 EMRS1 (MEM DLL on, DQS# disable)
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00100542				@DirectCmd	chip1 MRS (MEM DLL reset) CL=4, BL=4
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x01100000				@DirectCmd	chip1 PALL
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x05100000				@DirectCmd	chip1 REFA
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x05100000				@DirectCmd	chip1 REFA
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00100442				@DirectCmd	chip1 MRS (MEM DLL unreset)
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00110780				@DirectCmd	chip1 EMRS1 (OCD default)
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x00110400				@DirectCmd	chip1 EMRS1 (OCD exit)
+	str	r1, [r0, #0x10]  @DMC_DIRECTCMD
+
+	ldr	r1, =0x0FF02030				@ConControl	auto refresh on
+	str	r1, [r0]
+
+	ldr	r1, =0xFFFF00FF				@PwrdnConfig
+	str	r1, [r0, #0x28]  @DMC_PWRDNCONFIG
+
+	ldr	r1, =DMC1_MEMCONTROL			@MemControl	BL=4, 2 chip, DDR2 type, dynamic self refresh, force precharge, dynamic power down off
+	str	r1, [r0, #0x04]  @DMC_MEMCONTROL
+
 	mov	pc, lr
