@@ -25,6 +25,8 @@
 #define CONFIG_MCP_SINGLE 	1
 #define CONFIG_EVT1				1
 
+#define CONFIG_SPL_LIBCOMMON_SUPPORT	1
+
 #define TEXT_BASE 					0x23E00000
 
 #define DMC0_MEMCONTROL	0x00202400	// MemControl	BL=4, 1Chip, DDR2 Type, dynamic self refresh, force precharge, dynamic power down off
