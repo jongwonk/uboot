@@ -90,6 +90,16 @@ static inline unsigned int samsung_get_base_##device(void)	\
 		return 0;					\
 }
 
+static inline unsigned int read_register(uint32_t addr)
+{
+	return *((uint32_t volatile const*)addr);
+}
+
+static inline void write_register(uint32_t addr, uint32_t val)
+{
+	*((uint32_t volatile *)addr) = val;
+}
+
 SAMSUNG_BASE(clock, CLOCK_BASE)
 SAMSUNG_BASE(gpio, GPIO_BASE)
 SAMSUNG_BASE(pro_id, PRO_ID)

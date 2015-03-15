@@ -25,9 +25,15 @@
 #define CONFIG_MCP_SINGLE 	1
 #define CONFIG_EVT1				1
 
+#define CONFIG_SYS_GENERIC_BOARD 1
 #define CONFIG_SPL_LIBCOMMON_SUPPORT	1
 
+#define S5P_CHECK_DIDLE	(1<<19)
+
 #define TEXT_BASE 					0x23E00000
+
+#define BL2_START_OFFSET	49
+#define BL2_SIZE_BLOC_COUNT	0x80000
 
 #define DMC0_MEMCONTROL	0x00202400	// MemControl	BL=4, 1Chip, DDR2 Type, dynamic self refresh, force precharge, dynamic power down off
 #define DMC0_MEMCONFIG_0	0x20F00313	// MemConfig0	256MB config, 8 banks,Mapping Method[12:15]0:linear, 1:linterleaved, 2:Mixed
@@ -368,7 +374,5 @@
 #define CONFIG_USB_GADGET_MASS_STORAGE
 
 #define CONFIG_OF_LIBFDT
-
-#define CONFIG_SYS_GENERIC_BOARD
 
 #endif	/* __CONFIG_H */

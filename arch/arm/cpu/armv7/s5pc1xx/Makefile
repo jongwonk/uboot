@@ -12,3 +12,8 @@ obj-y	= cache.o
 obj-y	+= reset.o
 
 obj-y	+= clock.o
+
+ifdef CONFIG_SPL_BUILD
+obj-y	+= spl_boot.o
+obj-y	+= lowlevel_init.o
+endif
