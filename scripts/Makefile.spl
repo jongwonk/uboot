@@ -149,7 +149,10 @@ endif
 boot.bin: $(obj)/u-boot-spl.bin
 	$(call if_changed,mkimage)
 
-ALL-y	+= $(obj)/$(SPL_BIN).bin
+$(obj)/u-boot-spl.dis:	$(obj)/u-boot-spl
+		$(OBJDUMP) -d $< > $@
+		
+ALL-y	+= $(obj)/$(SPL_BIN).bin $(obj)/u-boot-spl.dis
 
 ifdef CONFIG_SAMSUNG
 ALL-y	+= $(obj)/$(BOARD)-spl.bin
@@ -174,7 +177,9 @@ endif
 $(obj)/$(BOARD)-spl.bin: $(obj)/u-boot-spl.bin
 	$(if $(wildcard $(objtree)/spl/board/samsung/$(BOARD)/tools/mk$(BOARD)spl),\
 	$(objtree)/spl/board/samsung/$(BOARD)/tools/mk$(BOARD)spl,\
-	$(objtree)/tools/mkexynosspl) $(VAR_SIZE_PARAM) $< $@
+	$(if $(objtree)/tools/mk$(BOARD)spl,\
+	$(objtree)/tools/mk$(BOARD)spl,\
+	$(objtree)/tools/mkexynosspl)) $(VAR_SIZE_PARAM) $< $@
 endif
 
 quiet_cmd_objcopy = OBJCOPY $@

@@ -317,7 +317,7 @@ uart_asm_init:
 .globl mem_ctrl_asm_init
 mem_ctrl_asm_init:
 
-	/* DMC0 initialization at single Type*/1
+	/* DMC0 initialization at single Type*/
 	ldr	r0, =0xF0000000 @ DMC0
 
 	ldr	r1, =0x00101000				@PhyControl0 DLL parameter setting, manual 0x00101000

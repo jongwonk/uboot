@@ -130,6 +130,7 @@ HOSTLOADLIBES_fit_check_sign := $(HOSTLOADLIBES_mkimage)
 
 hostprogs-$(CONFIG_EXYNOS5250) += mkexynosspl
 hostprogs-$(CONFIG_EXYNOS5420) += mkexynosspl
+hostprogs-$(CONFIG_S5PV210) += mk$(BOARD)spl
 HOSTCFLAGS_mkexynosspl.o := -pedantic
 
 ifdtool-objs := $(LIBFDT_OBJS) ifdtool.o
