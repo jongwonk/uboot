@@ -36,6 +36,7 @@ lowlevel_init:
 	beq	didle_wakeup
 
 skip_check_didle:
+#if 0
 	add	r0, r8, #0x2C0				@ S5PC110_GPIO_J4
 	ldr	r1, [r0, #0x0]				@ GPIO_CON_OFFSET
 	bic	r1, r1, #(0xf << 4)			@ 1 * 4-bit
@@ -45,7 +46,7 @@ skip_check_didle:
 	ldr	r1, [r0, #0x4]				@ GPIO_DAT_OFFSET
 	bic	r1, r1, #(1 << 1)
 	str	r1, [r0, #0x4]				@ GPIO_DAT_OFFSET
-
+#endif
 	/* IO retension release */
 	ldr	r0, =S5PC110_OTHERS			@ 0xE010E000
 	ldr	r1, [r0]
