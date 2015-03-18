@@ -46,6 +46,13 @@ skip_check_didle:
 	bic	r1, r1, #(1 << 1)
 	str	r1, [r0, #0x4]				@ GPIO_DAT_OFFSET
 
+	/* IO retension release */
+	ldr	r0, =S5PC110_OTHERS			@ 0xE010E000
+	ldr	r1, [r0]
+	ldr	r2, =((1 << 31) | (1 << 29) | (1 << 28))
+	orr	r1, r1, r2
+	str	r1, [r0]
+	
 	/*
 	 * Initialize Async Register Setting for EVT1
 	 * Because we are setting EVT1 as the default value of EVT0,
@@ -121,70 +128,66 @@ skip_check_didle:
 	bic     r1, r1, #0x1
 	str     r1, [r0]
 
-	/*
-	 * Diable ABB block to reduce sleep current at low temperature
-	 * Note that it's hidden register setup don't modify it
-	 */
-	ldr	r0, =0xE010C300
-	ldr	r1, =0x00800000
-	str	r1, [r0]
-
-	/* IO retension release */
-	ldr	r0, =S5PC110_OTHERS			@ 0xE010E000
-	ldr	r1, [r0]
-	ldr	r2, =((1 << 31) | (1 << 30) | (1 << 29) | (1 << 28))
-	orr	r1, r1, r2
-	/* Do not release retention here for S5PC110 */
-
 	/* Disable Watchdog */
 	ldr	r0, =S5PC110_WATCHDOG_BASE		@ 0xE2700000
 	str	r5, [r0]
 
-	/* setting SRAM */
-	ldr	r0, =S5PC110_SROMC_BASE
-	ldr	r1, =0x9
+	/*
+	 * Diable ABB block to reduce sleep current at low temperature
+	 * Note that it's hidden register setup don't modify it
+	 */	
+	ldr	r0, =0xE010C300
+	ldr	r1, =0x00800000
 	str	r1, [r0]
-
-	/* S5PC100 has 3 groups of interrupt sources */
-	ldr	r0, =S5PC110_VIC0_BASE			@ 0xF2000000
-	add	r1, r0, #0x00100000
-	add	r2, r0, #0x00200000
-
-	/* Disable all interrupts (VIC0, VIC1 and VIC2) */
-	mvn	r3, #0x0
-	str	r3, [r0, #0x14]				@ INTENCLEAR
-	str	r3, [r1, #0x14]				@ INTENCLEAR
-	str	r3, [r2, #0x14]				@ INTENCLEAR
-
-	/* Set all interrupts as IRQ */
-	str	r5, [r0, #0xc]				@ INTSELECT
-	str	r5, [r1, #0xc]				@ INTSELECT
-	str	r5, [r2, #0xc]				@ INTSELECT
-
-	/* Pending Interrupt Clear */
-	str	r5, [r0, #0xf00]			@ INTADDRESS
-	str	r5, [r1, #0xf00]			@ INTADDRESS
-	str	r5, [r2, #0xf00]			@ INTADDRESS
-
-	bl  system_clock_init
-
-	bl mem_ctrl_asm_init
-
-	/* for UART */
-	bl	uart_asm_init
-
-	bl	internal_ram_init
-
-	ldr	r0, =S5PC110_WAKEUP_STAT
-	ldr	r1, [r0]
-	str	r1, [r0]
-
-	/* IO retension release */
-	ldr	r0, =S5PC110_OTHERS			@ 0xE010E000
-	ldr	r1, [r0]
-	ldr	r2, =((1 << 31) | (1 << 30) | (1 << 29) | (1 << 28))
+	
+	/* SRAM(2MB) init for SMDKC110 */
+	/* GPJ1 SROM_ADDR_16to21 */
+	ldr	r0, =0xE0200000  @ ELFIN_GPIO_BASE
+	
+	ldr	r1, [r0, #0x260]
+	bic	r1, r1, #0xFFFFFF
+	ldr	r2, =0x444444
 	orr	r1, r1, r2
+	str	r1, [r0, #0x260]
+
+	ldr	r1, [r0, #0x268]
+	ldr	r2, =0x3ff
+	bic	r1, r1, r2
+	str	r1, [r0, #0x268]
+
+	/* GPJ4 SROM_ADDR_16to21 */
+	ldr	r1, [r0, #0x2C0]
+	bic	r1, r1, #(0xF<<16)
+	ldr	r2, =(0x4<<16)
+	orr	r1, r1, r2
+	str	r1, [r0, #0x2C0]
+
+	ldr	r1, [r0, #0x2C8]
+	ldr	r2, =(0x3<<8)
+	bic	r1, r1, r2
+	str	r1, [r0, #0x2C8]
+	
+	ldr	r0, =S5PC110_SROMC_BASE
+	ldr	r1, =0x1
 	str	r1, [r0]
+
+	/* PS_HOLD pin(GPH0_0) set to high */
+	ldr	r0, =0xE010E81C @ PS_HOLD_CONTROL
+	ldr	r1, [r0]
+	orr	r1, r1, #0x300	
+	orr	r1, r1, #0x1	
+	str	r1, [r0]
+	
+#ifdef CONFIG_SPL_BUILD	
+	bl  system_clock_init
+	bl  mem_ctrl_asm_init
+	bl	uart_asm_init
+	bl	tzpc_init
+#endif
+
+	ldr	r0, =S5PC110_WAKEUP_STAT @ clear
+	ldr	r1, [r0]
+	str	r1, [r0]	@ to clear
 
 	b	1f
 
@@ -272,7 +275,7 @@ system_clock_init:
 	str	r1, [r0, #0x318]  @CLK_DIV6_OFFSET
 
 	mov	pc, lr
-internal_ram_init: @ TZPC initialization
+tzpc_init: @ TZPC initialization
 	ldr	r0, =0xF1500000 @TZPC0
 	ldr	r1, =0x0	@ no secure region
 	str	r1, [r0]
