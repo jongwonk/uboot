@@ -82,10 +82,10 @@ void copy_uboot_to_ram(void)
     
     u32 offset = 0, size = 0;
     u32 ch = read_register(0xD0037488);
-        
-    if (bootmode == BOOT_MODE_OM)
-        bootmode = get_boot_mode();
 
+    if (bootmode == BOOT_MODE_OM)
+      bootmode = get_boot_mode();
+	
     switch (bootmode) {
     case BOOT_MODE_MMCSD:
         offset = MOVI_BL2_POS;
@@ -98,7 +98,7 @@ void copy_uboot_to_ram(void)
 
     if (copy_bl2)
     {
-		if(ch == 0xeB000000)
+		if(ch == 0xEB000000)
 		{
 			copy_bl2(0,offset, size, (u32*)CONFIG_SYS_TEXT_BASE, 0);	
 		}
@@ -107,6 +107,7 @@ void copy_uboot_to_ram(void)
 			copy_bl2(2, offset, size, (u32*)CONFIG_SYS_TEXT_BASE,0);
 		}
 	}
+				
 }
 
 void memzero(void *s, size_t n)
@@ -141,8 +142,10 @@ void board_init_f(unsigned long bootflag)
 
     setup_global_data(&local_gd);
 
+#if 0
     if (do_lowlevel_init())
         power_exit_wakeup();
+#endif
 
     copy_uboot_to_ram();
 
@@ -163,9 +166,9 @@ void board_init_r(gd_t *id, ulong dest_addr)
 
 unsigned int get_boot_mode(void)
 {
-	unsigned int om_pin = read_register(S5PC110_CLOCK_BASE);
+	unsigned int om_pin = read_register(0xE0000004/*PRO_ID_BASE + OMR_OFFSET*/);
 
-	return om_pin;
+	return om_pin & 0x3F;
 }
 
 void power_exit_wakeup(void)

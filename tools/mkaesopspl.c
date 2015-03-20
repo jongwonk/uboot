@@ -156,7 +156,7 @@ int main(int argc, char **argv)
 
 	/* Pad if needed with 0xff to make flashing faster. */
 	if (read_size < count)
-		memset((char *)buffer + read_size, 0xff, count - read_size);
+		memset((char *)buffer + read_size, 0x00, count - read_size);
 
 	for (i = 0, checksum = 0; i < count; i++)
 		checksum += buffer[i];

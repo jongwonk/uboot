@@ -24,36 +24,17 @@
 
 	.globl lowlevel_init
 lowlevel_init:
-	mov	r11, lr
+	push {lr}
 
 	/* r5 has always zero */
 	mov	r5, #0
 
 	ldr	r0, =S5PC110_RST_STAT
 	ldr	r1, [r0]
-	and	r1, r1, #0x000D0000
+	and r1, r1, #(0x1 << 19)
 	cmp	r1, #(0x1 << 19)			@ DEEPIDLE_WAKEUP
 	beq	didle_wakeup
 
-skip_check_didle:
-#if 0
-	add	r0, r8, #0x2C0				@ S5PC110_GPIO_J4
-	ldr	r1, [r0, #0x0]				@ GPIO_CON_OFFSET
-	bic	r1, r1, #(0xf << 4)			@ 1 * 4-bit
-	orr	r1, r1, #(0x1 << 4)
-	str	r1, [r0, #0x0]				@ GPIO_CON_OFFSET
-
-	ldr	r1, [r0, #0x4]				@ GPIO_DAT_OFFSET
-	bic	r1, r1, #(1 << 1)
-	str	r1, [r0, #0x4]				@ GPIO_DAT_OFFSET
-#endif
-	/* IO retension release */
-	ldr	r0, =S5PC110_OTHERS			@ 0xE010E000
-	ldr	r1, [r0]
-	ldr	r2, =((1 << 31) | (1 << 29) | (1 << 28))
-	orr	r1, r1, r2
-	str	r1, [r0]
-	
 	/*
 	 * Initialize Async Register Setting for EVT1
 	 * Because we are setting EVT1 as the default value of EVT0,
@@ -99,6 +80,7 @@ skip_check_didle:
 	bic     r1, r1, #0x1
 	str     r1, [r0]
 
+	ldr     r0, =0xf1b00000
 	ldr     r0, =0xf1b00000
 	ldr     r1, [r0]
 	bic     r1, r1, #0x1
@@ -181,11 +163,22 @@ skip_check_didle:
 	
 #ifdef CONFIG_SPL_BUILD	
 	bl  system_clock_init
-	bl  mem_ctrl_asm_init
 	bl	uart_asm_init
+	bl  mem_ctrl_asm_init
 	bl	tzpc_init
+#else
+	ldr	r0, =0xE2900420 @ UART0 TX Buffer
+	ldr	r1, ='K'
+	str	r1, [r0]
 #endif
 
+	/* IO retension release */
+	ldr	r0, =S5PC110_OTHERS			@ 0xE010E000
+	ldr	r1, [r0]
+	ldr	r2, =((1 << 31) | (1 << 29) | (1 << 28))
+	orr	r1, r1, r2
+	str	r1, [r0]
+	
 	ldr	r0, =S5PC110_WAKEUP_STAT @ clear
 	ldr	r1, [r0]
 	str	r1, [r0]	@ to clear
@@ -211,7 +204,8 @@ lockloop:
 	nop
 
 1:
-	mov	lr, r11
+	pop {lr}
+	
 	mov	pc, lr
 
 /*
@@ -313,7 +307,7 @@ uart_asm_init:
 	ldr	r1, =UART_UDIVSLOT_VAL
 	str	r1, [r0, #0x2C] @UDIVSLOT_OFFSET
 
-	ldr	r1, =0x4f4f4f4f
+	ldr	r1, ='O'
 	str	r1, [r0, #0x20] @TXH_OFFSET, @'O'
 
 	mov	pc, lr

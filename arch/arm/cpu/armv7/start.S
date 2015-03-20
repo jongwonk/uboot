@@ -35,12 +35,13 @@
 
 reset:
 	/* Allow the board to save important registers */
-	b	save_boot_params
+	bl	save_boot_params
 save_boot_params_ret:
 	/*
 	 * disable interrupts (FIQ and IRQ), also set the cpu to SVC32 mode,
 	 * except if in HYP mode already
 	 */
+
 	mrs	r0, cpsr
 	and	r1, r0, #0x1f		@ mask mode bits
 	teq	r1, #0x1a		@ test for HYP mode
@@ -54,6 +55,7 @@ save_boot_params_ret:
  * (OMAP4 spl TEXT_BASE is not 32 byte aligned.
  * Continue to use ROM code vector only in OMAP4 spl)
  */
+ 
 #if !(defined(CONFIG_OMAP44XX) && defined(CONFIG_SPL_BUILD))
 	/* Set V=0 in CP15 SCTLR register - for VBAR to point to vector */
 	mrc	p15, 0, r0, c1, c0, 0	@ Read CP15 SCTLR Register
@@ -68,9 +70,12 @@ save_boot_params_ret:
 	/* the mask ROM code should have PLL and others stable */
 #ifndef CONFIG_SKIP_LOWLEVEL_INIT
 	bl	cpu_init_cp15
+	
+	ldr sp, =0xd0036400
+	sub sp, sp, #12 @  reserved 3 words
+	
 	bl	cpu_init_crit
 #endif
-
 	bl	_main
 
 /*------------------------------------------------------------------------------*/
@@ -99,7 +104,7 @@ ENDPROC(c_runtime_cpu_setup)
  *
  *************************************************************************/
 ENTRY(save_boot_params)
-	b	save_boot_params_ret		@ back to my caller
+	bx lr
 ENDPROC(save_boot_params)
 	.weak	save_boot_params
 
@@ -185,6 +190,8 @@ ENTRY(cpu_init_crit)
 	 * basic memory. Go here to bump up clock rate and handle
 	 * wake up conditions.
 	 */
-	b	lowlevel_init		@ go setup pll,mux,memory
+	push {lr}
+	bl	lowlevel_init		@ go setup pll,mux,memory
+	pop {lr}
 ENDPROC(cpu_init_crit)
 #endif

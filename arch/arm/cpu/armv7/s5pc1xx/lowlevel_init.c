@@ -44,6 +44,7 @@ void mem_ctrl_init(int action);
 void tzpc_init(void);
 void set_ps_hold_ctrl(void);
 
+#if 0
 int do_lowlevel_init(void)
 {
 	uint32_t reset_status;
@@ -74,6 +75,7 @@ int do_lowlevel_init(void)
 
 	return actions & DO_WAKEUP;
 }
+#endif
 
 uint32_t get_reset_status(void)
 {
