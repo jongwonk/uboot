@@ -71,7 +71,11 @@ save_boot_params_ret:
 #ifndef CONFIG_SKIP_LOWLEVEL_INIT
 	bl	cpu_init_cp15
 	
-	ldr sp, =0xd0036400
+#if defined(CONFIG_SPL_BUILD) && defined(CONFIG_SPL_STACK)
+	ldr	sp, =(CONFIG_SPL_STACK)
+#else
+	ldr	sp, =(CONFIG_SYS_INIT_SP_ADDR)
+#endif	
 	sub sp, sp, #12 @  reserved 3 words
 	
 	bl	cpu_init_crit
