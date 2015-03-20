@@ -38,35 +38,27 @@ DECLARE_GLOBAL_DATA_PTR;
 
 /* Index into irom ptr table */
 enum index {
-#if 0
     NF8_ReadPage_Adv,
     NF16_ReadPage_Adv,
-#endif 
     CopySDMMCtoMem,
-#if 0
     CopyMMC4_3toMem,
     CopyOND_ReadMultiPages,
     CopyOND_ReadMultiPages_Adv,
-#endif
 };
 
 /* IROM Function Pointers Table */
-u32 irom_ptr_table[] = {
-#if 0
+static u32 irom_ptr_table[] = {
     [NF8_ReadPage_Adv] = 0xD0037F90,
     [NF16_ReadPage_Adv] = 0xD0037F94,
-#endif 
     [CopySDMMCtoMem] = 0xD0037F98,
-#if 0
     [CopyMMC4_3toMem] = 0xD0037F9C,
     [CopyOND_ReadMultiPages] = 0xD0037FA0,
     [CopyOND_ReadMultiPages_Adv ] = 0xD0037FA4,
-#endif 
     };
 
-void *get_irom_func(int index)
+static u32 *get_irom_func(int index)
 {
-    return (void *)*(u32 *)irom_ptr_table[index];
+    return (u32 *)irom_ptr_table[index];
 }
 
 /*
@@ -90,7 +82,7 @@ void copy_uboot_to_ram(void)
     case BOOT_MODE_MMCSD:
         offset = MOVI_BL2_POS;
         size = MOVI_BL2_BLKCNT;
-        copy_bl2 = get_irom_func(CopySDMMCtoMem);
+        copy_bl2 = (copy_sd_mmc_to_mem)get_irom_func(CopySDMMCtoMem);
         break;
     default:
         break;
