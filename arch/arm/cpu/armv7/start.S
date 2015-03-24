@@ -196,6 +196,6 @@ ENTRY(cpu_init_crit)
 	 */
 	push {lr}
 	bl	lowlevel_init		@ go setup pll,mux,memory
-	pop {lr}
+	pop {pc}
 ENDPROC(cpu_init_crit)
 #endif
