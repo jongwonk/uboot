@@ -9,4 +9,4 @@
 #
 
 obj-y	:= aesop.o onenand.o
-obj-y	+= lowlevel_init.o
+obj-y	+= lowlevel_init.o pmic.o
