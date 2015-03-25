@@ -17,6 +17,7 @@
 #include <dm.h>
 #include <fdtdec.h>
 #include <fs.h>
+#include <config.h>
 #if defined(CONFIG_CMD_IDE)
 #include <ide.h>
 #endif

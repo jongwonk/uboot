@@ -311,7 +311,7 @@
 /* Goni has 3 banks of DRAM, but swap the bank */
 #define CONFIG_NR_DRAM_BANKS	2
 #define PHYS_SDRAM_1		CONFIG_SYS_SDRAM_BASE	/* OneDRAM Bank #0 */
-#define PHYS_SDRAM_1_SIZE	(256 << 20)		/* 80 MB in Bank #0 */
+#define PHYS_SDRAM_1_SIZE	(256 << 20)		/* 256 MB in Bank #0 */
 #define PHYS_SDRAM_2		0x40000000		/* mDDR DMC1 Bank #1 */
 #define PHYS_SDRAM_2_SIZE	(256 << 20)		/* 256 MB in Bank #1 */
 
@@ -376,5 +376,7 @@
 #define CONFIG_USB_GADGET_MASS_STORAGE
 
 #define CONFIG_OF_LIBFDT
+#define CONFIG_OF_CONTROL 1
+#define CONFIG_OF_SEPARATE 1
 
 #endif	/* __CONFIG_H */

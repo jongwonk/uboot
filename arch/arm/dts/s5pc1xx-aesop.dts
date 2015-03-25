@@ -27,7 +27,7 @@
 	};
 
 	serial@e2900800 {
-		compatible = "samsung,s5pc110-uart";
+		compatible = "samsung,exynos4210-uart";
 		reg = <0xe2900800 0x400>;
 		id = <2>;
 	};

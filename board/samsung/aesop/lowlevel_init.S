@@ -164,6 +164,7 @@ lowlevel_init:
 #ifdef CONFIG_SPL_BUILD	
 	bl  system_clock_init
 	bl	uart_asm_init
+	bl PMIC_InitIp
 	bl  mem_ctrl_asm_init
 	bl	tzpc_init
 #else
@@ -204,9 +205,7 @@ lockloop:
 	nop
 
 1:
-	pop {lr}
-	
-	mov	pc, lr
+	pop {pc}
 
 /*
  * system_clock_init: Initialize core clock and bus clock.
