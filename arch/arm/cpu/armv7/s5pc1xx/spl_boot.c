@@ -10,7 +10,7 @@
 #define BOOT_MODE_OM		0x0
 #define BOOT_MODE_ONENAND   0x1
 #define BOOT_MODE_NAND      0x2
-#define BOOT_MODE_MMCSD     0x3
+#define BOOT_MODE_MMCSD     0xC
 #define BOOT_MODE_NOR       0x4
 #define BOOT_MODE_SEC_DEV   0x5
 
@@ -28,8 +28,6 @@
 #define MOVI_ZIMAGE_BLKCNT	(PART_SIZE_KERNEL/MOVI_BLKSIZE)
 
 #define MOVI_BL2_POS	((eFUSE_SIZE/MOVI_BLKSIZE) + MOVI_BL1_BLKCNT + MOVI_ENV_BLKCNT)
-
-typedef u32(*copy_sd_mmc_to_mem)(u32 channel, u32 start_block, u16 block_size, u32 *trg, u32 init);
 
 unsigned int get_boot_mode(void);
 void power_exit_wakeup(void);
@@ -56,9 +54,11 @@ static u32 irom_ptr_table[] = {
     [CopyOND_ReadMultiPages_Adv ] = 0xD0037FA4,
     };
 
-static u32 *get_irom_func(int index)
+typedef u32(*copy_sd_mmc_to_mem)(u32 channel, u32 start_block, u16 block_size, u32 *trg, u32 init);
+    	
+static u32 get_irom_func(int index)
 {
-    return (u32 *)irom_ptr_table[index];
+    return irom_ptr_table[index];
 }
 
 /*
@@ -68,38 +68,35 @@ static u32 *get_irom_func(int index)
 */
 void copy_uboot_to_ram(void)
 {
-    unsigned int bootmode = BOOT_MODE_OM;
+	unsigned int ret;
+	unsigned int bootmode = BOOT_MODE_OM;
+	copy_sd_mmc_to_mem copy_bl2 = NULL;
 
-    copy_sd_mmc_to_mem copy_bl2 = NULL;
-    
-    u32 offset = 0, size = 0;
-    u32 ch = read_register(0xD0037488);
+	u32 ch = *(volatile u32 *)(0xD0037488);
 
     if (bootmode == BOOT_MODE_OM)
       bootmode = get_boot_mode();
-	
+
     switch (bootmode) {
     case BOOT_MODE_MMCSD:
-        offset = MOVI_BL2_POS;
-        size = MOVI_BL2_BLKCNT;
-        copy_bl2 = (copy_sd_mmc_to_mem)get_irom_func(CopySDMMCtoMem);
+    	copy_bl2 = (copy_sd_mmc_to_mem) (*(u32 *) get_irom_func(CopySDMMCtoMem));
         break;
     default:
         break;
     }
-
-    if (copy_bl2)
-    {
-		if(ch == 0xEB000000)
-		{
-			copy_bl2(0,offset, size, (u32*)CONFIG_SYS_TEXT_BASE, 0);	
+	
+	if(copy_bl2)
+	{
+		if (ch == 0xEB000000) {
+			ret = copy_bl2(0, MOVI_BL2_POS, MOVI_BL2_BLKCNT,
+				(u32*)CONFIG_SYS_TEXT_BASE, 0);
 		}
-		else if(ch == 0xEB200000)
-		{
-			copy_bl2(2, offset, size, (u32*)CONFIG_SYS_TEXT_BASE,0);
+		else if (ch == 0xEB200000) {
+			ret = copy_bl2(2, MOVI_BL2_POS, MOVI_BL2_BLKCNT,
+					(u32*)CONFIG_SYS_TEXT_BASE, 0);
+			
 		}
 	}
-				
 }
 
 void memzero(void *s, size_t n)
@@ -130,8 +127,8 @@ static void setup_global_data(gd_t *gdp)
 void board_init_f(unsigned long bootflag)
 {
     __aligned(8) gd_t local_gd;
-    __attribute__((noreturn)) void (*uboot)(void);
-
+    void (*uboot)(void);
+        
     setup_global_data(&local_gd);
 
 #if 0
@@ -142,7 +139,8 @@ void board_init_f(unsigned long bootflag)
     copy_uboot_to_ram();
 
     /* Jump to U-Boot image */
-    uboot = (void *)CONFIG_SYS_TEXT_BASE;
+    uboot = CONFIG_SYS_TEXT_BASE;
+	
     (*uboot)();
     /* Never returns Here */
 }

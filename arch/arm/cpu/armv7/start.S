@@ -36,7 +36,7 @@
 reset:
 	/* Allow the board to save important registers */
 	bl	save_boot_params
-save_boot_params_ret:
+
 	/*
 	 * disable interrupts (FIQ and IRQ), also set the cpu to SVC32 mode,
 	 * except if in HYP mode already
