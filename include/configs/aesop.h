@@ -14,6 +14,8 @@
 #include <linux/sizes.h>
 #include <asm/arch/cpu.h>		/* get chip and board defs */
 
+#define DEBUG
+
 /* High Level Configuration Options */
 #define CONFIG_SAMSUNG		1	/* in a SAMSUNG core */
 #define CONFIG_S5P					1	/* which is in a S5P Family */
