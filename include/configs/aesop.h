@@ -23,6 +23,7 @@
 #define CONFIG_MACH_AESOP	1	/* working with Goni */
 
 #define MACH_TYPE_AESOP		2456
+#define CONFIG_MACH_TYPE	MACH_TYPE_AESOP
 
 #define CONFIG_MCP_SINGLE 	1
 #define CONFIG_EVT1				1
