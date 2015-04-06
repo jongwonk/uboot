@@ -2,7 +2,7 @@
 
 void Delay(void)
 {
-	unsigned long i,j;
+	unsigned long i;
 	for(i=0;i<DELAY;i++);
 }
 

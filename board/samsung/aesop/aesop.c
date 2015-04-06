@@ -76,7 +76,7 @@ void dram_init_banksize(void)
 #ifdef CONFIG_DISPLAY_BOARDINFO
 int checkboard(void)
 {
-	puts("Board:\tGoni\n");
+	puts("Board:\tAesop\n");
 	return 0;
 }
 #endif

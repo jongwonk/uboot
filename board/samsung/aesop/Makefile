@@ -8,5 +8,6 @@
 # SPDX-License-Identifier:	GPL-2.0+
 #
 
-obj-y	:= aesop.o onenand.o
+obj-y	:= aesop.o 
+obj-(CONFIG_USE_ONENAND_BOARD_INIT)	+= onenand.o
 obj-y	+= lowlevel_init.o pmic.o

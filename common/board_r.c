@@ -385,7 +385,7 @@ static int initr_nand(void)
 /* go init the NAND */
 static int initr_onenand(void)
 {
-	puts("NAND:  ");
+	puts("oneNAND:  ");
 	onenand_init();
 	return 0;
 }
@@ -396,7 +396,7 @@ static int initr_mmc(void)
 {
 	puts("MMC:   ");
 	mmc_initialize(gd->bd);
-	return 0;
+	return 0;  
 }
 #endif
 

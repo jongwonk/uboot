@@ -15,6 +15,8 @@
 #include <asm/arch/cpu.h>		/* get chip and board defs */
 
 #define DEBUG
+#define CONFIG_MAX_MEM_MAPPED		(256*1024*1024)
+#define CONFIG_VERY_BIG_RAM
 
 /* High Level Configuration Options */
 #define CONFIG_SAMSUNG		1	/* in a SAMSUNG core */
@@ -29,6 +31,7 @@
 #define CONFIG_EVT1				1
 
 #define CONFIG_SYS_GENERIC_BOARD 1
+
 #define CONFIG_SPL_LIBCOMMON_SUPPORT	1
 
 #define S5P_CHECK_DIDLE	(1<<19)
@@ -153,7 +156,7 @@
 #define CONFIG_PWM			1
 
 /* It should define before config_cmd_default.h */
-#define CONFIG_SYS_NO_FLASH		1
+#define CONFIG_SYS_NO_FLASH	1
 
 /* Command definition */
 #include <config_cmd_default.h>
@@ -165,10 +168,14 @@
 #undef CONFIG_CMD_XIMG
 #define CONFIG_CMD_CACHE
 #define CONFIG_CMD_REGINFO
-#define CONFIG_CMD_ONENAND
+#define CONFIG_CMD_NAND
+/* #define CONFIG_CMD_ONENAND */
 #define CONFIG_CMD_MMC
 #define CONFIG_CMD_DFU
 #define CONFIG_CMD_GPT
+
+#define CONFIG_SYS_MAX_NAND_DEVICE	1
+#define CONFIG_SYS_NAND_BASE           (0xB0E000000)
 
 /* USB Composite download gadget - g_dnl */
 #define CONFIG_USBDOWNLOAD_GADGET
@@ -329,9 +336,11 @@
 #define CONFIG_ENV_OFFSET		((32 - 4) << 10) /* 32KiB - 4KiB */
 #define CONFIG_ENV_OVERWRITE
 
-#define CONFIG_USE_ONENAND_BOARD_INIT
+
+/*	#define CONFIG_USE_ONENAND_BOARD_INIT	*/
 #define CONFIG_SAMSUNG_ONENAND		1
 #define CONFIG_SYS_ONENAND_BASE		0xB0000000
+
 
 #define CONFIG_DOS_PARTITION		1
 
@@ -379,7 +388,14 @@
 #define CONFIG_USB_GADGET_MASS_STORAGE
 
 #define CONFIG_OF_LIBFDT
-#define CONFIG_OF_CONTROL 1
+
+#ifndef CONFIG_OF_CONTROL
+#define CONFIG_OF_CONTROL
+#endif
+
+#ifndef CONFIG_OF_EMBED
+#define CONFIG_OF_EMBED
+#endif
 
 #define BOOT_MODE_OM		0x0
 #define BOOT_MODE_ONENAND   0x1
@@ -409,5 +425,9 @@
 #define FDT_BLOB_POS	(MOVI_ENV_POS + MOVI_ENV_BLKCNT)
 #define MOVI_ZIMAGE_POS	(FDT_BLOB_POS + MOVI_FDT_BLKCNT)
 #define MOVI_ROOTFS_POS	(MOVI_ZIMAGE_POS + MOVI_ZIMAGE_BLKCNT)
+
+#define BL2_DRAM_ADDR		(CONFIG_SYS_TEXT_BASE)
+#define ENV_DRAM_ADDR		(BL2_DRAM_ADDR + PART_SIZE_BL2)
+#define FDT_DRAM_ADDR 		(ENV_DRAM_ADDR + PART_SIZE_FDT)
 
 #endif	/* __CONFIG_H */

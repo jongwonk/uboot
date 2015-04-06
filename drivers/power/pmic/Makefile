@@ -6,6 +6,7 @@
 #
 
 obj-$(CONFIG_POWER_LTC3676) += pmic_ltc3676.o
+obj-$(CONFIG_POWER_MAX8698) += pmic_max8698.o
 obj-$(CONFIG_POWER_MAX8998) += pmic_max8998.o
 obj-$(CONFIG_POWER_MAX8997) += pmic_max8997.o
 obj-$(CONFIG_POWER_MUIC_MAX8997) += muic_max8997.o

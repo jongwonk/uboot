@@ -1,0 +1,44 @@
+/*
+ *  Copyright (C) 2011 Samsung Electronics
+ *  Lukasz Majewski <l.majewski@samsung.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
+ */
+
+#ifndef __MAX8698_PMIC_H_
+#define __MAX8698_PMIC_H_
+
+/* MAX 8998 registers */
+enum {
+	MAX8698_REG_ONOFF1,
+	MAX8698_REG_ONOFF2,
+	MAX8698_REG_ADISCHG1,	
+	MAX8698_REG_ADISCHG2,
+	MAX8698_REG_BUCK1_V1,
+	MAX8698_REG_BUCK1_V2,
+	MAX8698_REG_BUCK2,
+	MAX8698_REG_BUCK3,
+	MAX8698_REG_LDO2_LDO3,
+	MAX8698_REG_LDO4,
+	MAX8698_REG_LDO5,
+	MAX8698_REG_LDO6,
+	MAX8698_REG_LDO7,
+	MAX8698_REG_LDO8,
+	MAX8698_REG_BKCHR,
+	MAX8698_REG_LDO9,
+	MAX8698_REG_LBCNFG1,
+	PMIC_NUM_OF_REGS,
+};
+
+#define MAX8698_LDO3		(1 << 2)
+#define MAX8698_LDO4		(1 << 1)
+#define MAX8698_LDO7		(1 << 6)
+#define MAX8698_LDO8		(1 << 5)
+#define MAX8698_LDO17		(1 << 4)
+#define MAX8698_SAFEOUT1	(1 << 4)
+
+#define MAX8698_I2C_ADDR        (0xCC >> 1)
+
+enum { LDO_OFF, LDO_ON };
+
+#endif /* __MAX8698_PMIC_H_ */

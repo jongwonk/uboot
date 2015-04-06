@@ -7,28 +7,6 @@
 #include <common.h>
 #include <config.h>
 
-#define BOOT_MODE_OM		0x0
-#define BOOT_MODE_ONENAND   0x1
-#define BOOT_MODE_NAND      0x2
-#define BOOT_MODE_MMCSD     0xC
-#define BOOT_MODE_NOR       0x4
-#define BOOT_MODE_SEC_DEV   0x5
-
-#define eFUSE_SIZE	512
-#define MOVI_BLKSIZE	512
-#define SS_SIZE		8*1024
-
-#define PART_SIZE_BL	(512*1024)
-#define PART_SIZE_KERNEL	(4*1024*1024)
-#define PART_SIZE_ROOTFS	(26*1024*1024)
-
-#define MOVI_BL1_BLKCNT	(SS_SIZE/MOVI_BLKSIZE)
-#define MOVI_ENV_BLKCNT	(CONFIG_ENV_SIZE/MOVI_BLKSIZE)
-#define MOVI_BL2_BLKCNT	(PART_SIZE_BL/MOVI_BLKSIZE)
-#define MOVI_ZIMAGE_BLKCNT	(PART_SIZE_KERNEL/MOVI_BLKSIZE)
-
-#define MOVI_BL2_POS	((eFUSE_SIZE/MOVI_BLKSIZE) + MOVI_BL1_BLKCNT + MOVI_ENV_BLKCNT)
-
 unsigned int get_boot_mode(void);
 void power_exit_wakeup(void);
 
@@ -65,6 +43,11 @@ static u32 get_irom_func(int index)
 * Copy U-boot from mmc to RAM:
 * COPY_BL2_FNPTR_ADDR: Address in iRAM, which Contains
 * Pointer to API (Data transfer from mmc to ram)
+* 
+*    BL1  -     4kb
+*    BL2  - 512kb
+*    ENV - 4kb
+*    FDT  - 32kb
 */
 void copy_uboot_to_ram(void)
 {
@@ -88,11 +71,12 @@ void copy_uboot_to_ram(void)
 	if(copy_bl2)
 	{
 		if (ch == 0xEB000000) {
-			ret = copy_bl2(0, MOVI_BL2_POS, MOVI_BL2_BLKCNT,
+			ret = copy_bl2(0, MOVI_BL2_POS, MOVI_BL2_BLKCNT+MOVI_ENV_BLKCNT+MOVI_FDT_BLKCNT,
 				(u32*)CONFIG_SYS_TEXT_BASE, 0);
+				
 		}
 		else if (ch == 0xEB200000) {
-			ret = copy_bl2(2, MOVI_BL2_POS, MOVI_BL2_BLKCNT,
+			ret = copy_bl2(2, MOVI_BL2_POS, MOVI_BL2_BLKCNT+MOVI_ENV_BLKCNT+MOVI_FDT_BLKCNT,
 					(u32*)CONFIG_SYS_TEXT_BASE, 0);
 			
 		}
