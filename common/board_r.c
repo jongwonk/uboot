@@ -501,7 +501,7 @@ static int initr_api(void)
 #endif
 
 /* enable exceptions */
-#if defined(CONFIG_ARM) || defined(CONFIG_AVR32)
+#if defined(CONFIG_CMD_INTERRUPT && (CONFIG_ARM) || defined(CONFIG_AVR32))
 static int initr_enable_interrupts(void)
 {
 	enable_interrupts();
@@ -827,9 +827,11 @@ init_fnc_t init_sequence_r[] = {
 #ifdef CONFIG_CMD_KGDB
 	initr_kgdb,
 #endif
+#ifdef CONFIG_CMD_INTERRUPT
 	interrupt_init,
 #if defined(CONFIG_ARM) || defined(CONFIG_AVR32)
 	initr_enable_interrupts,
+#endif
 #endif
 #if defined(CONFIG_X86) || defined(CONFIG_MICROBLAZE) || defined(CONFIG_AVR32)
 	timer_init,		/* initialize timer */
