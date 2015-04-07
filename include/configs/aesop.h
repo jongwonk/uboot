@@ -40,8 +40,8 @@
 
 #define CONFIG_SPL_STACK	0xD0036400
 
-#define BL2_START_OFFSET	49
-#define BL2_SIZE_BLOC_COUNT	0x80000
+#define eFUSE_SIZE		512
+#define MOVI_BLKSIZE	512
 
 #define DMC0_MEMCONTROL	0x00202400	// MemControl	BL=4, 1Chip, DDR2 Type, dynamic self refresh, force precharge, dynamic power down off
 #define DMC0_MEMCONFIG_0	0x20F00313	// MemConfig0	256MB config, 8 banks,Mapping Method[12:15]0:linear, 1:linterleaved, 2:Mixed
@@ -328,15 +328,6 @@
 #define CONFIG_SYS_MONITOR_BASE		0x00000000
 #define CONFIG_SYS_MONITOR_LEN		(256 << 10)	/* 256 KiB */
 
-/* FLASH and environment organization */
-#define CONFIG_MMC_DEFAULT_DEV	0
-#define CONFIG_ENV_IS_IN_MMC
-#define CONFIG_SYS_MMC_ENV_DEV		CONFIG_MMC_DEFAULT_DEV
-#define CONFIG_ENV_SIZE			4096
-#define CONFIG_ENV_OFFSET		((32 - 4) << 10) /* 32KiB - 4KiB */
-#define CONFIG_ENV_OVERWRITE
-
-
 /*	#define CONFIG_USE_ONENAND_BOARD_INIT	*/
 #define CONFIG_SAMSUNG_ONENAND		1
 #define CONFIG_SYS_ONENAND_BASE		0xB0000000
@@ -404,9 +395,9 @@
 #define BOOT_MODE_NOR       0x4
 #define BOOT_MODE_SEC_DEV   0x5
 
-#define eFUSE_SIZE	512
+#define eFUSE_SIZE		512
 #define MOVI_BLKSIZE	512
-#define SS_SIZE		8*1024
+#define SS_SIZE			8*1024
 
 #define PART_SIZE_BL2	(512*1024)
 #define PART_SIZE_FDT	(32*1024)
@@ -426,8 +417,19 @@
 #define MOVI_ZIMAGE_POS	(FDT_BLOB_POS + MOVI_FDT_BLKCNT)
 #define MOVI_ROOTFS_POS	(MOVI_ZIMAGE_POS + MOVI_ZIMAGE_BLKCNT)
 
+#define BL2_START_OFFSET	(MOVI_BL2_POS/MOVI_BLKSIZE)
+
 #define BL2_DRAM_ADDR		(CONFIG_SYS_TEXT_BASE)
 #define ENV_DRAM_ADDR		(BL2_DRAM_ADDR + PART_SIZE_BL2)
 #define FDT_DRAM_ADDR 		(ENV_DRAM_ADDR + PART_SIZE_FDT)
+
+/* FLASH and environment organization */
+#define CONFIG_MMC_DEFAULT_DEV	0
+#define CONFIG_ENV_IS_IN_MMC
+#define CONFIG_SYS_MMC_ENV_DEV		CONFIG_MMC_DEFAULT_DEV
+#define CONFIG_ENV_SIZE			4096
+#define CONFIG_ENV_OFFSET		(MOVI_ENV_POS)
+#define CONFIG_ENV_OVERWRITE
+
 
 #endif	/* __CONFIG_H */
