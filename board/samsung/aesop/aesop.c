@@ -73,6 +73,13 @@ void dram_init_banksize(void)
 	gd->bd->bi_dram[1].size = PHYS_SDRAM_2_SIZE;
 }
 
+int board_nand_init(struct nand_chip *nand)
+{
+
+
+	return 0;
+}
+
 #ifdef CONFIG_DISPLAY_BOARDINFO
 int checkboard(void)
 {
