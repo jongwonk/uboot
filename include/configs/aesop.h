@@ -40,6 +40,8 @@
 
 #define CONFIG_SPL_STACK	0xD0036400
 
+#define CONFIG_SKIP_RELOCATE
+
 #define eFUSE_SIZE		512
 #define MOVI_BLKSIZE	512
 
