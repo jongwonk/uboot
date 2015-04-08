@@ -501,7 +501,8 @@ static int initr_api(void)
 #endif
 
 /* enable exceptions */
-#if defined(CONFIG_CMD_INTERRUPT && (CONFIG_ARM) || defined(CONFIG_AVR32))
+
+#if defined(CONFIG_CMD_INTERRUPT) && (defined(CONFIG_ARM) || defined(CONFIG_AVR32))
 static int initr_enable_interrupts(void)
 {
 	enable_interrupts();
