@@ -85,8 +85,10 @@ clr_gd:
 	/* mov r0, #0 not needed due to above code */
 	bl	board_init_f
 
-#ifndef CONFIG_SKIP_RELOCATE
+
 #if ! defined(CONFIG_SPL_BUILD)
+
+#ifndef CONFIG_SKIP_RELOCATE
 
 /*
  * Set up intermediate environment (new sp and gd) and call
