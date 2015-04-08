@@ -85,6 +85,7 @@ clr_gd:
 	/* mov r0, #0 not needed due to above code */
 	bl	board_init_f
 
+#ifndef CONFIG_SKIP_RELOCATE
 #if ! defined(CONFIG_SPL_BUILD)
 
 /*
@@ -109,6 +110,8 @@ here:
  */
 
 	bl	relocate_vectors
+
+#endif
 
 /* Set up final (full) environment */
 
