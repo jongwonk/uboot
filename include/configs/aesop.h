@@ -131,9 +131,6 @@
 #define CONFIG_INITRD_TAG
 #define CONFIG_CMDLINE_EDITING
 
-/* Size of malloc() pool before and after relocation */
-#define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + (80 << 20))
-
 #define CONFIG_DRIVER_SMC911X	1
 
 #ifdef CONFIG_DRIVER_SMC911X
@@ -402,6 +399,7 @@
 #define SS_SIZE			8*1024
 
 #define PART_SIZE_BL2	(512*1024)
+#define CONFIG_ENV_SIZE	(4*1024)
 #define PART_SIZE_FDT	(32*1024)
 #define PART_SIZE_KERNEL	(4*1024*1024)
 #define PART_SIZE_ROOTFS	(26*1024*1024)
@@ -429,9 +427,10 @@
 #define CONFIG_MMC_DEFAULT_DEV	0
 #define CONFIG_ENV_IS_IN_MMC
 #define CONFIG_SYS_MMC_ENV_DEV		CONFIG_MMC_DEFAULT_DEV
-#define CONFIG_ENV_SIZE			4096
 #define CONFIG_ENV_OFFSET		(MOVI_ENV_POS)
 #define CONFIG_ENV_OVERWRITE
 
+/* Size of malloc() pool before and after relocation */
+#define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + (80 << 20))
 
 #endif	/* __CONFIG_H */
