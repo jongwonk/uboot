@@ -110,10 +110,9 @@ here:
 /*
  * now relocate vectors
  */
+#endif
 
 	bl	relocate_vectors
-
-#endif
 
 /* Set up final (full) environment */
 
