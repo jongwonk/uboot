@@ -174,7 +174,7 @@
 #define CONFIG_CMD_GPT
 
 #define CONFIG_SYS_MAX_NAND_DEVICE	1
-#define CONFIG_SYS_NAND_BASE           (0xB0E000000)
+#define CONFIG_SYS_NAND_BASE           (0xB0E00000)
 
 /* USB Composite download gadget - g_dnl */
 #define CONFIG_USBDOWNLOAD_GADGET
