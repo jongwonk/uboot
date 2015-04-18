@@ -23,6 +23,8 @@
 #define CONFIG_S5P					1	/* which is in a S5P Family */
 #define CONFIG_S5PV210			1	/* which is in a S5PC110 */
 #define CONFIG_MACH_AESOP	1	/* working with Goni */
+#define CONFIG_NAND_S5PC1XX
+#define CFG_NAND_HWECC	1
 
 #define MACH_TYPE_AESOP		2456
 #define CONFIG_MACH_TYPE	MACH_TYPE_AESOP
@@ -308,7 +310,7 @@
 #define CONFIG_SYS_HUSH_PARSER		/* use "hush" command parser	*/
 #define CONFIG_SYS_PROMPT	"Goni # "
 #define CONFIG_SYS_CBSIZE	256	/* Console I/O Buffer Size */
-#define CONFIG_SYS_PBSIZE	384	/* Print Buffer Size */
+#define CONFIG_SYS_PBSIZE	512	/* Print Buffer Size */
 #define CONFIG_SYS_MAXARGS	16	/* max number of command args */
 /* Boot Argument Buffer Size */
 #define CONFIG_SYS_BARGSIZE		CONFIG_SYS_CBSIZE
