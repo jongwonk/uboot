@@ -308,7 +308,7 @@
 
 #define CONFIG_SYS_LONGHELP		/* undef to save memory */
 #define CONFIG_SYS_HUSH_PARSER		/* use "hush" command parser	*/
-#define CONFIG_SYS_PROMPT	"Goni # "
+#define CONFIG_SYS_PROMPT	"AESOP # "
 #define CONFIG_SYS_CBSIZE	256	/* Console I/O Buffer Size */
 #define CONFIG_SYS_PBSIZE	512	/* Print Buffer Size */
 #define CONFIG_SYS_MAXARGS	16	/* max number of command args */
@@ -429,7 +429,7 @@
 #define CONFIG_MMC_DEFAULT_DEV	0
 #define CONFIG_ENV_IS_IN_MMC
 #define CONFIG_SYS_MMC_ENV_DEV		CONFIG_MMC_DEFAULT_DEV
-#define CONFIG_ENV_OFFSET		(MOVI_ENV_POS)
+#define CONFIG_ENV_OFFSET		(MOVI_ENV_POS*MOVI_BLKSIZE)
 #define CONFIG_ENV_OVERWRITE
 
 /* Size of malloc() pool before and after relocation */
