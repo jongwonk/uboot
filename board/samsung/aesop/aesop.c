@@ -16,8 +16,20 @@
 #include <samsung/misc.h>
 #include <usb.h>
 #include <usb_mass_storage.h>
+#include <s5pc110.h>
+
 
 DECLARE_GLOBAL_DATA_PTR;
+
+#define SMC9115_Tacs	(0)	// 0clk		address set-up
+#define SMC9115_Tcos	(4)	// 4clk		chip selection set-up
+#define SMC9115_Tacc	(13)	// 14clk	access cycle
+#define SMC9115_Tcoh	(1)	// 1clk		chip selection hold
+#define SMC9115_Tah	    (4)	// 4clk		address holding time
+#define SMC9115_Tacp	(6)	// 6clk		page mode access cycle
+#define SMC9115_PMC	    (0)	// normal(1data)page mode configuration
+
+extern int smc911x_initialize(u8 dev_num, int base_addr);
 
 u32 get_board_rev(void)
 {
@@ -203,3 +215,39 @@ int misc_init_r(void)
 	return 0;
 }
 #endif
+
+static void s5pv210_smc911x_set(void)
+{
+        unsigned int tmp;
+
+        tmp = ((SMC9115_Tacs<<28)|(SMC9115_Tcos<<24)|(SMC9115_Tacc<<16)|(SMC9115_Tcoh<<12)|(SMC9115_Tah<<8)|(SMC9115_Tacp<<4)|(SMC9115_PMC));
+        __raw_writel(tmp,ELFIN_SROM_BASE+0x14);
+
+        tmp = __raw_readl(ELFIN_SROM_BASE);
+        tmp &= ~(0xf<<16);
+
+        tmp |= (0x1<<16);
+        tmp |= (0x1<<17);
+
+        __raw_writel(tmp, ELFIN_SROM_BASE);
+
+        tmp = __raw_readl(ELFIN_GPIO_BASE + MP01CON_OFFSET);
+        tmp &= ~(0xf<<16);
+        tmp |=(2<<16);
+        __raw_writel(tmp,ELFIN_GPIO_BASE + MP01CON_OFFSET);
+}
+
+#ifdef CONFIG_CMD_NET
+int board_eth_init(bd_t *bis)
+{
+	int rc = 0;
+
+	s5pv210_smc911x_set();
+
+#ifdef CONFIG_SMC911X
+	rc = smc911x_initialize(0, CONFIG_SMC911X_BASE);
+#endif
+	return rc;
+}
+#endif
+
